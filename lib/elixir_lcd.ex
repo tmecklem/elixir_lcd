@@ -38,37 +38,20 @@ defmodule ElixirLcd do
   def connect do
     {:ok, pid} = I2c.start_link("i2c-0", 0x3f)
 
-    IO.puts(" bl | en | rs | data")
-    IO.puts("====================")
     # reset
     write_4_bits(pid, 0x00)
     :timer.sleep 1000
-   
-    #write_4_bits(pid, @clear_all)
-    #:timer.sleep 5 
-    #write_4_bits(pid, @clear_all)
-    #:timer.sleep 5 
-    #write_4_bits(pid, @clear_all)
-    #:timer.sleep 1 
-    IO.puts "Entering 4-bit mode"
+    write_4_bits(pid, @clear_all)
+    :timer.sleep 5 
     write_4_bits(pid, @enter_4_bit_mode)
-
-    IO.puts "Setting function set to 2 lines and 5x8 dots"
     lcd_send(pid, @instruction_function_set ||| @fs_2_line)
-
-    IO.puts "Turning on display and cursor"
     display_control = @dc_display_on ||| @dc_cursor_on ||| @dc_blink_on
     lcd_send(pid, @instruction_display_control ||| display_control)
-
-    #IO.puts "Clearing display"
-    #lcd_send(pid, @instruction_clear_display)
-
-    IO.puts "Setting entry left"
+    lcd_send(pid, @instruction_clear_display)
     lcd_send(pid, @instruction_entry_mode_set ||| @ems_increment)
  
-    # IO.puts "Printing 'Ready'"
-    # :timer.sleep 200
-    # write_chars(pid, 'Ready', 1)
+    :timer.sleep 200
+    write_chars(pid, 'Ready', 1)
   end
 
   def write_chars(pid, char_list, line) do
@@ -95,13 +78,6 @@ defmodule ElixirLcd do
     write_4_bits(pid, low) 
   end
 
-  defp put_debug(data) do
-    backlight = (data &&& @lcd_backlight) >>> 3
-    enable_bit = (data &&& @en) >>> 2
-    register = (data &&& @rs)
-    :io.format("  ~w |  ~w |  ~w | ~4.2.0B~n", [backlight, enable_bit, register, data >>> 4])
-  end 
-
   defp write_4_bits(pid, data) do
     i2c_expander_write(pid, data)
     pulse_enable(pid, data)
@@ -116,7 +92,6 @@ defmodule ElixirLcd do
 
   defp i2c_expander_write(pid, data) do
     data_with_backlight = data ||| @lcd_backlight
-    put_debug(data_with_backlight)
     I2c.write(pid, <<data_with_backlight>>)
     :timer.sleep 1
   end
