@@ -53,21 +53,20 @@ defmodule ElixirLcd do
     {:ok, pid}
   end
 
-  def write_chars(pid, char_list, line) do
-    line_command = case line do
+  def write_chars(_, []), do: nil
+  def write_chars(pid, [head | tail]) do
+    lcd_send(pid, head, @rs)
+    write_chars(pid, tail)
+  end
+
+  def move(pid, row, column) do
+    line_command = case row do
       1 -> 0x80
       2 -> 0xC0
       3 -> 0x94
       4 -> 0xD4
     end
-    lcd_send(pid, line_command)
-    _write_chars(pid, char_list)
-  end
-
-  defp _write_chars(_, []), do: nil
-  defp _write_chars(pid, [head | tail]) do
-    lcd_send(pid, head, @rs)
-    _write_chars(pid, tail)
+    lcd_send(pid, line_command ||| (column - 1))
   end
 
   defp lcd_send(pid, data, mode \\ 0) do
