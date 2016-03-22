@@ -18,6 +18,7 @@ defmodule ElixirLcd do
   @cs_moveright 0x04
 
   @instruction_function_set 0x20
+  @fs_4_bit_mode 0x00
   @fs_8_bit_mode 0x10
   @fs_2_line 0x08
   @fs_5x10_dots 0x04
@@ -28,7 +29,6 @@ defmodule ElixirLcd do
   @lcd_no_backlight 0x00
 
   @clear_all @instruction_clear_display ||| @instruction_return_home
-  @enter_4_bit_mode 0x20
 
   @lcd_backlight 0b00001000
   @en            0b00000100  # Enable bit
@@ -37,19 +37,7 @@ defmodule ElixirLcd do
 
   def connect(device, i2c_address) do
     {:ok, pid} = I2c.start_link(device, i2c_address)
-
-    # reset
-    write_4_bits(pid, 0x00)
-    :timer.sleep 1000
-    write_4_bits(pid, @clear_all)
-    :timer.sleep 5
-    write_4_bits(pid, @enter_4_bit_mode)
-    lcd_send(pid, @instruction_function_set ||| @fs_2_line)
-    display_control = @dc_display_on
-    lcd_send(pid, @instruction_display_control ||| display_control)
-    lcd_send(pid, @instruction_clear_display)
-    lcd_send(pid, @instruction_entry_mode_set ||| @ems_increment)
-    :timer.sleep 20
+    reset(pid)
     {:ok, pid}
   end
 
@@ -67,6 +55,24 @@ defmodule ElixirLcd do
       4 -> 0xD4
     end
     lcd_send(pid, line_command ||| (column - 1))
+  end
+
+  defp reset(pid) do
+    eight_bit_function = @instruction_function_set ||| @fs_8_bit_mode
+    write_4_bits(pid, eight_bit_function) # reset LCD driver
+    :timer.sleep 10
+    write_4_bits(pid, eight_bit_function) # do it again per datasheet
+    :timer.sleep 10
+    write_4_bits(pid, eight_bit_function) # do it again per datasheet
+    :timer.sleep 10
+
+    #now go 4 bit mode and setup LCD
+    write_4_bits(pid, @instruction_function_set ||| @fs_4_bit_mode)
+    lcd_send(pid, @instruction_function_set ||| @fs_4_bit_mode ||| @fs_2_line)
+    lcd_send(pid, @instruction_display_control ||| @dc_display_on)
+    lcd_send(pid, @instruction_clear_display)
+    lcd_send(pid, @instruction_entry_mode_set ||| @ems_increment)
+    :timer.sleep 20
   end
 
   defp lcd_send(pid, data, mode \\ 0) do
