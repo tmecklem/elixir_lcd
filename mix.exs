@@ -4,10 +4,10 @@ defmodule ElixirLcd.Mixfile do
   def project do
     [app: :elixir_lcd,
      version: "0.0.1",
-     elixir: "~> 1.1",
+     elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps()]
   end
 
   # Configuration for the OTP application
@@ -27,6 +27,6 @@ defmodule ElixirLcd.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:elixir_ale, "~> 0.4.1"}]
+    [{:elixir_ale, "~> 0.5.7"}]
   end
 end
