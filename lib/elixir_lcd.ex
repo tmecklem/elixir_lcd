@@ -1,4 +1,5 @@
-use Bitwise
-
-defmodule ElixirLcd do
+defmodule ElixirLCD do
+  @moduledoc """
+  LCD Controller
+  """
 end

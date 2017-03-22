@@ -2,6 +2,23 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+# Sample HD44780 configuration for a 2x20 display connected to
+# a Raspberry Pi. The 4 bit interface requires 6 GPIO pins
+# which are managed by the driver. Example connected as:
+#
+#
+# config :hd44780, display: %{
+#   rs: 1,
+#   en: 2,
+#   d4: 3,
+#   d5: 4,
+#   d6: 5,
+#   d7: 6,
+#   rows: 2,
+#   cols: 20,
+#   font_5x10: false
+# }
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

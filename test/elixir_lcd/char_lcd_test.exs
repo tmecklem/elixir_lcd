@@ -1,6 +1,6 @@
-defmodule ElixirLcdTest do
+defmodule ElixirLCD.CharLCDTest do
   use ExUnit.Case
-  doctest ElixirLcd
+  doctest ElixirLCD.CharLCD
 
   test "the truth" do
     assert 1 + 1 == 2

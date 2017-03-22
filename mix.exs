@@ -1,32 +1,52 @@
-defmodule ElixirLcd.Mixfile do
+defmodule ElixirLCD.Mixfile do
   use Mix.Project
 
   def project do
     [app: :elixir_lcd,
-     version: "0.0.1",
+     name: "elixir_lcd",
+     description: description(),
+     version: "0.1.0",
      elixir: "~> 1.4",
+     package: package(),
+     source_url: "https://github.com/cthree/elixir_lcd",
+     make_clean: ["clean"],
+     docs: [extras: ["README.md"]],
+     aliases: ["docs": ["docs", &copy_images/1]],
+     elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps()]
   end
 
-  # Configuration for the OTP application
-  #
-  # Type "mix help compile.app" for more information
+  defp elixirc_paths([:test, :dev]), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
+
   def application do
     [applications: [:logger]]
   end
 
-  # Dependencies can be Hex packages:
-  #
-  #   {:mydep, "~> 0.3.0"}
-  #
-  # Or git/path repositories:
-  #
-  #   {:mydep, git: "https://github.com/elixir-lang/mydep.git", tag: "0.1.0"}
-  #
-  # Type "mix help deps" for more examples and options
   defp deps do
-    [{:elixir_ale, "~> 0.5.7"}]
+    [
+      {:elixir_ale, "~> 0.5.0", only: [:prod]},
+      {:ex_doc, "~> 0.11", only: :dev}
+    ]
+  end
+
+  defp description do
+    """
+    Elixir API to control and write to character matrix LCD displays.
+    """
+  end
+
+  defp package do
+    %{files: ["lib", "mix.exs", "README.md", "LICENSE"],
+      maintainers: ["Erik Petersen"],
+      licenses: ["Apache-2.0"],
+      links: %{"GitHub" => "https://github.com/cthree/elixir_lcd"}}
+  end
+
+  # Copy the images referenced by docs, since ex_doc doesn't do this.
+  defp copy_images(_) do
+    File.cp_r "assets", "doc/assets"
   end
 end
