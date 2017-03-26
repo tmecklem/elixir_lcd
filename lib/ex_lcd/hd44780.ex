@@ -1,6 +1,6 @@
-defmodule ElixirLCD.CharLCD.HD44780 do
+defmodule ExLCD.HD44780 do
   @moduledoc """
-  **ElixirLCD.CharLCD.HD44780** is the display driver module for Hitachi
+  **ExLCD.HD44780** is the display driver module for Hitachi
   HD44780 type parallel LCD display controller managed display modules.
 
   ## Hitachi HD44780 Controller
@@ -22,8 +22,8 @@ defmodule ElixirLCD.CharLCD.HD44780 do
 
   The start/1 function expects to receive a map of configuration settings
   for the display and it's hardware interface. The configuration map is
-  passed by your application to CharLCD.start_link/1 and then on to this
-  driver module. Please see CharLCD for details. The following keys are
+  passed by your application to ExLCD.start_link/1 and then on to this
+  driver module. Please see ExLCD for details. The following keys are
   used by this driver to operate the display:
 
   * *Key*     -> **Type(O|R)**  -> *Description*
@@ -66,12 +66,12 @@ defmodule ElixirLCD.CharLCD.HD44780 do
 
   * Hitachi HD44780 Datasheet
   * Wikipedia Entry for HD44780
-  * ElixirLCD.CharLCD
+  * ExLCD
   * Raspberry Pi Example Application with nerves
   """
 
   use Bitwise
-  use ElixirLCD.CharLCD.Driver
+  use ExLCD.Driver
   alias ElixirALE.GPIO
 
   @low    0
@@ -238,7 +238,7 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   end
 
   # -------------------------------------------------------------------
-  # CharLCD API callback
+  # ExLCD API callback
   #
 
   defp command(display, {:clear, _params}) do
@@ -470,7 +470,7 @@ end
 
 if Mix.env != :prod do
   if Mix.env != :test do
-    defmodule HD44780Test.MockHD44780 do
+    defmodule MockHD44780 do
       @moduledoc false
       def write(_, _), do: :ok
     end
@@ -478,14 +478,13 @@ if Mix.env != :prod do
 
   defmodule ElixirALE.GPIO do
     @moduledoc false
-    require Logger
 
     def start_link(pin, _pin_direction \\ :foo, _opts \\ []) do
       {:ok, pin}
     end
 
     def write(pin, value) do
-      HD44780Test.MockHD44780.write(pin, value)
+      MockHD44780.write(pin, value)
       :ok
     end
 

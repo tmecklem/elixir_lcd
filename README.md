@@ -1,46 +1,45 @@
-# ElixirLCD
+# ExLCD
 
-**ElixirLCD** is an LCD Display Framework which provides a standard and
-consistent API for using simple LCD display modules in your
-embedded projects running on BEAM. It uses [elixir_ale](https://github.com/fhunleth/elixir_ale) for hardware
-IO.
+**ExLCD** is a Hex package providing an API and support for character
+matrix LCD displays in your Elixir and nerves projects. It uses
+[elixir_ale](https://github.com/fhunleth/elixir_ale) for hardware IO.
 
 The hardware interface and the user API are separate modules providing
 relative hardware independence. This provides you with the ability
-to change display modules without changing your application code.
-Simply change the driver module or write one if it's not available.
+to change displays without significant changes your application code.
 
 ## Examples
 
-Example projects using ElixirLCD are available in the
-[elixir_lcd_examples](https://github.com/cthree/elixir_lcd_examples)
+Example projects using ExLCD are available in the
+[ex_lcd_examples](https://github.com/cthree/ex_lcd_examples)
 Github repository.
 
 ## Contributing
 
-If you want to develop a new driver to support an unsupported display
-module for use with ElixirLCD, fix or report a bug, add a feature
-or otherwise contribute to the project please open an issue to discuss
-your issue or ideas. I'm happy to accept fixes, suggestions, requests
-and help! Hardware support drivers are particularly welcome!!
+If you wish to develop a new driver to support an unsupported display
+module, fix or report a bug, add a feature or otherwise contribute to
+the project please open an issue to discuss your issue or idea. I'm
+happy to accept suggestions, bug reports, pull requests and other
+help! Driver modules for unsupported displays is especially appreciated.
 
 ## Acknowledgements
 
-Many thanks to [@tmecklem](https://github.com/tmecklem) for starting this
-project and allowing me to run with it and make it my own.
+Many thanks to [@tmecklem](https://github.com/tmecklem) for inspiration
+and encouragement. ExLCD started as his elixir_lcd package but none of
+the original code remains but the guidance was appreciated.
 
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
 
-  1. Add elixir_lcd to your list of dependencies in `mix.exs`:
+  1. Add ex_lcd to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:elixir_lcd, "~> 0.1.0"}]
+          [{:ex_lcd, "~> 0.2.0"}]
         end
 
-  2. Ensure elixir_lcd is started before your application:
+  2. Ensure ex_lcd is started before your application:
 
         def application do
-          [applications: [:elixir_lcd]]
+          [applications: [:ex_lcd]]
         end

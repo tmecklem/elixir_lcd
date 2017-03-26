@@ -1,28 +1,26 @@
-defmodule ElixirLCD.Mixfile do
+defmodule ExLCD.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :elixir_lcd,
-     name: "elixir_lcd",
-     description: description(),
-     version: "0.1.0",
+    [app: :ex_lcd,
+     version: "0.2.0",
      elixir: "~> 1.4",
+     description: description(),
      package: package(),
-     source_url: "https://github.com/cthree/elixir_lcd",
-     make_clean: ["clean"],
      docs: [extras: ["README.md"]],
      aliases: ["docs": ["docs", &copy_images/1]],
-     elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     elixirc_paths: elixirc_paths(Mix.env),
      deps: deps()]
   end
 
+  # Specifies which paths to compile per environment.
   defp elixirc_paths([:test, :dev]), do: ["lib", "test/support"]
-  defp elixirc_paths(_),     do: ["lib"]
+  defp elixirc_paths(_), do: ["lib"]
 
   def application do
-    [applications: [:logger]]
+    []
   end
 
   defp deps do
@@ -34,15 +32,18 @@ defmodule ElixirLCD.Mixfile do
 
   defp description do
     """
-    Elixir API to control and write to character matrix LCD displays.
+    Hex package to use character matrix LCD displays including HD44780
+    in your Elixir/nerves projects. Uses elixir_ale for IO.
     """
   end
 
   defp package do
-    %{files: ["lib", "mix.exs", "README.md", "LICENSE"],
+    [
+      files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Erik Petersen"],
       licenses: ["Apache-2.0"],
-      links: %{"GitHub" => "https://github.com/cthree/elixir_lcd"}}
+      links: %{"GitHub" => "https://github.com/cthree/ex_lcd"}
+    ]
   end
 
   # Copy the images referenced by docs, since ex_doc doesn't do this.

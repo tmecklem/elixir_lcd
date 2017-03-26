@@ -1,35 +1,32 @@
-defmodule ElixirLCD.CharLCD do
+defmodule ExLCD do
   @moduledoc """
-  **ElixirLCD.CharLCD** implements a standard API for controlling and
-  displaying text on character matrix LCD display modules. CharLCD
+  **ExLCD** implements a standard API for controlling and
+  displaying text on character matrix LCD display modules. ExLCD
   handles most modes and operations supported by common display modules.
 
-  CharLCD controls an assortment of displays by interacting with a
-  driver module implementing the ElixirLCD.CharLCD.Driver behaviour.
-  CharLCD has no direct support for controlling hardware and instead
+  ExLCD controls an assortment of displays by interacting with a
+  driver module implementing the ExLCD.Driver behaviour.
+  ExLCD has no direct support for controlling hardware and instead
   delegates low-level functions driver modules for the actual device.
 
   ## Usage
 
-  ElixirLCD.CharLCD is implemented as a GenServer. Start it by calling
-  ElixirLCD.CharLCD.start_link/1 and passing a tuple containing the
+  ExLCD is implemented as a GenServer. Start it by calling
+  ExLCD.start_link/1 and passing a tuple containing the
   name of the driver module in the first element and a map of
   configuration parameters in second element. See the driver module
   documentation for what configuration parameters it accepts.
 
   Example:
   ```elixir
-    alias ElixirLCD.CharLCD
-    CharLCD.start_link({CharLCD.HD44780, %{...}})
+    alias ExLCD
+    ExLCD.start_link({ExLCD.HD44780, %{...}})
   ```
   """
   use GenServer
-  require Logger
-  alias ElixirLCD.CharLCD
 
   @type feature :: :display | :cursor | :blink | :autoscroll |
                    :rtl_text | :ltr_text
-  @type feature_state :: :on | :off
   @type bitmap :: list
 
   defmodule LCDState do
@@ -37,7 +34,7 @@ defmodule ElixirLCD.CharLCD do
   end
 
   @doc """
-  Start the CharLCD GenServer to manage the display.
+  Start the ExLCD GenServer to manage the display.
 
   Pass a tuple containing the name of the driver module in the first element
   and a map of configuration parameters in second element. See the driver
@@ -45,8 +42,8 @@ defmodule ElixirLCD.CharLCD do
 
   Example:
   ```elixir
-    alias ElixirLCD.CharLCD
-    CharLCD.start_link({CharLCD.HD44780, %{...}})
+    alias ExLCD
+    ExLCD.start_link({ExLCD.HD44780, %{...}})
   ```
   """
   @spec start_link({term, map}) :: {:ok, pid}
@@ -72,7 +69,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.clear
+      iex> ExLCD.clear
       :ok
     ```
   """
@@ -84,7 +81,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.home
+      iex> ExLCD.home
       :ok
     ```
   """
@@ -96,7 +93,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.set_cursor(2, 12)
+      iex> ExLCD.set_cursor(2, 12)
       :ok
     ```
   """
@@ -108,7 +105,7 @@ defmodule ElixirLCD.CharLCD do
 
   Example:
   ```elixir
-    iex> ElixirLCD.CharLCD.write("ElixirLCD!")
+    iex> ExLCD.write("ExLCD!")
     :ok
   ```
   """
@@ -120,7 +117,7 @@ defmodule ElixirLCD.CharLCD do
 
   Example:
   ```elixir
-    iex> ElixirLCD.CharLCD.scroll_right(6)
+    iex> ExLCD.scroll_right(6)
     :ok
   ```
   """
@@ -132,7 +129,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.scroll_right(6)
+      iex> ExLCD.scroll_right(6)
       :ok
     ```
   """
@@ -145,7 +142,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.move_left(4)
+      iex> ExLCD.move_left(4)
       :ok
     ```
   """
@@ -158,7 +155,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.move_right(1)
+      iex> ExLCD.move_right(1)
       :ok
     ```
   """
@@ -177,7 +174,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.create_char(0, [0x7F, 0x7F, 0x7F, 0x7F,
+      iex> ExLCD.create_char(0, [0x7F, 0x7F, 0x7F, 0x7F,
       ...>                                   0x7F, 0x7F, 0x7F, 0x7F])
       :ok
     ```
@@ -190,7 +187,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.enable(:display)
+      iex> ExLCD.enable(:display)
       :ok
     ```
   """
@@ -207,7 +204,7 @@ defmodule ElixirLCD.CharLCD do
 
     Example:
     ```elixir
-      iex> ElixirLCD.CharLCD.disable(:blink)
+      iex> ExLCD.disable(:blink)
       :ok
     ```
   """
@@ -216,15 +213,15 @@ defmodule ElixirLCD.CharLCD do
   def disable(:blink), do: cast({:disable, :blink})
   def disable(:display), do: cast({:disable, :display})
   def disable(:autoscroll), do: cast({:disable, :autoscroll})
-  def disable(:rtl_text), do: CharLCD.enable(:ltr_text)
-  def disable(:ltr_text), do: CharLCD.enable(:rtl_text)
+  def disable(:rtl_text), do: ExLCD.enable(:ltr_text)
+  def disable(:ltr_text), do: ExLCD.enable(:rtl_text)
 
   @doc """
   Stop the driver and release hardware resources.
 
   Example:
   ```elixir
-    iex> ElixirLCD.CharLCD.stop
+    iex> ExLCD.stop
     :ok
   ```
   """

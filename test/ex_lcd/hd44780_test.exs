@@ -1,8 +1,7 @@
-defmodule ElixirLCD.CharLCD.HD44780Test do
+defmodule ExLCD.HD44780Test do
   use ExUnit.Case
   use Bitwise
-  alias ElixirLCD.CharLCD.HD44780
-  alias HD44780Test.MockHD44780
+  alias ExLCD.HD44780
 
   setup do
     # Device config for testing
@@ -172,7 +171,7 @@ defmodule ElixirLCD.CharLCD.HD44780Test do
   end
 end
 
-defmodule HD44780Test.MockHD44780 do
+defmodule MockHD44780 do
   use GenServer
   use Bitwise
 
