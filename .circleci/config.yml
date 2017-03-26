@@ -10,6 +10,6 @@ jobs:
       MIX_ENV: test
 
     steps:
-      - run: mix local.hex --force
       - checkout
+      - run: yes | mix local.hex
       - run: mix deps.get
