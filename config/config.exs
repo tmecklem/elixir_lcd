@@ -8,12 +8,12 @@ use Mix.Config
 #
 #
 config :elixir_lcd, hd447090: %{
-  rs: 1,
-  en: 2,
-  d4: 3,
-  d5: 4,
-  d6: 5,
-  d7: 6,
+  rs: 25,
+  en: 24,
+  d4: 23,
+  d5: 22,
+  d6: 18,
+  d7: 17,
   rows: 2,
   cols: 20,
   font_5x10: false
