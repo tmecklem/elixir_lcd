@@ -6,11 +6,13 @@ jobs:
 
     working_directory: ~/ex_lcd
 
-    environment:
-      MIX_ENV: test
-
     steps:
       - checkout
       - run: mix local.hex --force
       - run: mix deps.get
-      - run: mix test
+
+      # Run tests
+      - run:
+          environment:
+            MIX_ENV: test
+          command: mix test
