@@ -7,17 +7,17 @@ use Mix.Config
 # which are managed by the driver. Example connected as:
 #
 #
-# config :hd44780, display: %{
-#   rs: 1,
-#   en: 2,
-#   d4: 3,
-#   d5: 4,
-#   d6: 5,
-#   d7: 6,
-#   rows: 2,
-#   cols: 20,
-#   font_5x10: false
-# }
+config :elixir_lcd, hd447090: %{
+  rs: 1,
+  en: 2,
+  d4: 3,
+  d5: 4,
+  d6: 5,
+  d7: 6,
+  rows: 2,
+  cols: 20,
+  font_5x10: false
+}
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

@@ -1,18 +1,53 @@
 defmodule ElixirLCD.CharLCD.HD44780 do
   @moduledoc """
-  The HD44780 module is an LCD driver module for CharLCD. There are no
-  user callable functions in this module, it is controlled by the CharLCD
-  API.
+  **ElixirLCD.CharLCD.HD44780** is the display driver module for Hitachi
+  HD44780 type parallel LCD display controller managed display modules.
+
+  ## Hitachi HD44780 Controller
+
+  The HD44780 is the most ubiquitous character matrix display controller
+  but not the only one. It supports a number of standard operations like
+  moving the cursor, displaying characters and scrolling. It is an 8-bit
+  parallel interface which can operate in 4-bit mode by sending 2 4-bit
+  nibbles to make one 8-bit byte.
+
+  It supports 208 characters which are compatible with UNICODE single byte
+  latin characters. The controller character ROM includes a number of non-
+  standard character glyphs which this driver maps to their multi-byte
+  UNICODE equivilents automatically. See the character map in this file for
+  details. There are also 8 user definable character bitmaps mapped to
+  characters byte codes 0-7.
 
   ## Configuration
 
-  While there are no callable functions you will still need to configure
-  the module hardware in your config.exs file.
+  The start/1 function expects to receive a map of configuration settings
+  for the display and it's hardware interface. The configuration map is
+  passed by your application to CharLCD.start_link/1 and then on to this
+  driver module. Please see CharLCD for details. The following keys are
+  used by this driver to operate the display:
+
+  * *Key*     -> **Type(O|R)**  -> *Description*
+  * rs        -> integer(R) -> The GPIO pin ID for the RS signal
+  * en        -> integer(R) -> The GPIO pin ID for the EN signal
+  * d0        -> integer(O) -> The GPIO pin ID for the d0 signal
+  * d1        -> integer(O) -> The GPIO pin ID for the d1 signal
+  * d2        -> integer(O) -> The GPIO pin ID for the d2 signal
+  * d3        -> integer(O) -> The GPIO pin ID for the d3 signal
+  * d4        -> integer(R) -> The GPIO pin ID for the d4 signal
+  * d5        -> integer(R) -> The GPIO pin ID for the d5 signal
+  * d6        -> integer(R) -> The GPIO pin ID for the d6 signal
+  * d7        -> integer(R) -> The GPIO pin ID for the d7 signal
+  * rows      -> integer(R) -> The number of display rows or lines
+  * cols      -> integer(R) -> The number of display columns
+  * font_5x10 -> boolean(O) -> Font: true: 5x10, false: 5x8 (default)
+
+  O - optional
+  R - required
 
   Example:
 
   ```elixir
-    config :hd44780, display: %{
+    config :MyApp, hd44780: %{
       rs: 1,
       en: 2,
       d4: 3,
@@ -20,35 +55,21 @@ defmodule ElixirLCD.CharLCD.HD44780 do
       d6: 5,
       d7: 6,
       rows: 2,
-      cols: 20,
-      font_5x10: false
+      cols: 20
     }
   ```
-  A minumum of 6 GPIO pins must be defined:
-  * ```rs:``` The RS (register select) pin
-  * ```en:``` The EN (enable) pin
-  * ```d4...d7: The D4 through D7 pins for a 4 bit interface
 
-  In addition to may also define some optional pins:
-  * ```rw:``` The RW (Read/Write) pin - connect to ground if not used
-  * ```d0...d3``` The D0 through D3 dins for an 8 bit inteface
+  ## More Information
 
-  If only d4...d7 are configured a 4 bit interface is assumed. The RW
-  pin is not currently used by this driver. You must connect the RW pin
-  to ground.
+  For more information about your display and its capabilities here are
+  a few resources to help you get the most of it:
 
-  In addition to pin configuration, properties of the display should also
-  be set:
-  * ```rows:``` The number of rows on the display (1 or 2)
-  * ```cols:``` The numbers of columns on the display
-
-  If your display has a 5x10 font you must set ```font_5x10:``` to true,
-  a 5x8 font is the default and therefore this key is optional for 5x8
-  font displays.
-
-  Please refer to the CharLCD documentations for additional API information
-  and configuration.
+  * Hitachi HD44780 Datasheet
+  * Wikipedia Entry for HD44780
+  * ElixirLCD.CharLCD
+  * Raspberry Pi Example Application with nerves
   """
+
   use Bitwise
   use ElixirLCD.CharLCD.Driver
   alias ElixirALE.GPIO
@@ -57,7 +78,7 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   @high   1
 
   # Function set flags
-  @mode_4bit  0x10
+  @mode_4bit  0x01
   @mode_8bit  0x00
   @font_5x8   0x00
   @font_5x10  0x04
@@ -93,24 +114,12 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   # -------------------------------------------------------------------
   # CharDisplay.Driver Behaviour
   #
-
-  def start() do
-    display = Application.get_env(:hd44780, :display)
-    display = display
-    |> Enum.into(@pins_4bit, &start_pin(display, &1, :output))
-    |> Enum.into(%{bits: 4})
-
-    display = case display[:d0] do
-      nil ->  display
-      _ ->  display
-            |> Enum.into(@pins_8bit, &start_pin(display, &1, :output))
-            |> Map.put(:bits, 8)
-    end
-
-    display
-    |>  init()
+  @doc false
+  def start(config) do
+    init(config)
   end
 
+  @doc false
   def stop(display) do
     {:ok, display} = command(display, {:display, :off})
     [ :rs_pid, :en_pid,
@@ -121,55 +130,56 @@ defmodule ElixirLCD.CharLCD.HD44780 do
     :ok
   end
 
+  @doc false
   def execute do
     &command/2
-  end
-
-  defp start_pin(display, pin, direction) do
-    %{^pin => gpio_number} = display
-    {:ok, pid} = GPIO.start_link(gpio_number, direction)
-    %{String.to_atom("#{to_string(pin)}_pid") => pid}
   end
 
   # ------------------------------------------------------------------
   # Initialization
   #
 
-  defp init(display) do
-    lines = case display[:rows] do
+  defp init(config) do
+    # validate and unpack the config
+    config |> validate_config!()
+
+    bits = case config[:d0] do
+      nil  ->  @mode_4bit
+      _    ->  @mode_8bit
+    end
+
+    lines = case config.rows do
       1 ->  @lines_1
       _ ->  @lines_2
     end
 
-    font = case display[:font_5x10] do
+    cols = config.cols
+
+    font = case config[:font_5x10] do
       true  ->  @font_5x10
       _     ->  @font_5x8
     end
 
-    bits = case display[:bits] do
-      4 ->  @mode_4bit
-      _ ->  @mode_8bit
+    pins = case bits do
+      @mode_8bit  ->  @pins_4bit ++ @pins_8bit
+      _           ->  @pins_4bit
     end
 
     starting_function_state = @cmd_functionset ||| bits ||| font ||| lines
     starting_display_state = @cmd_dispcontrol ||| @ctl_display
-    display_state = %{
+
+    Map.merge(config, %{
       function_set: starting_function_state,
-      # Set display on at intialization
       display_control: starting_display_state,
-      row_offsets: %{
-        0 => 0x00,
-        1 => 0x40,
-        2 => 0x00 + display[:cols],
-        3 => 0x40 + display[:cols]
-      },
+      row_offsets: row_offsets(cols),
       entry_mode: @cmd_entrymodeset,
       shift_control: @cmd_cursorshift
-    }
-
-    # initialize controller and set starting state
-    init(display, bits)
-    |>  Map.merge(display_state)
+    })
+    |>  reserve_gpio_pins(pins)
+    |>  delay(50)
+    |>  rs(@low)
+    |>  en(@low)
+    |>  poi(bits)
     |>  set_feature(:function_set)
     |>  set_feature(:display_control)
     |>  clear
@@ -177,21 +187,55 @@ defmodule ElixirLCD.CharLCD.HD44780 do
     |>  set_feature(:shift_control)
   end
 
-  # Power on initialization for 4bit operation
-  defp init(display, @mode_4bit) do
-    display
-    |>  delay(100)
-    |>  rs(@low)
-    |>  en(@low)
+  defp row_offsets(cols) do
+    %{ 0 => 0x00, 1 => 0x40, 2 => 0x00 + cols, 3 => 0x40 + cols }
+  end
+
+  # setup GPIO output pins, add the pids to the config and return
+  defp reserve_gpio_pins(config, pins) do
+    config
+    |>  Map.take(pins)
+    |>  Enum.map(fn {k, v} -> {String.to_atom("#{k}_pid"), start_pin(v, :output)} end)
+    |>  Map.new()
+    |>  Map.merge(config)
+  end
+
+  # start ElixirALE.GPIO GenServer to manage a GPIO pin and return the pid
+  defp start_pin(pin, direction) do
+    with {:ok, pid} <- GPIO.start_link(pin, direction)
+    do
+      pid
+    end
+  end
+
+  # Software Power On Init (POI) for 4bit operation of HD44780 controller.
+  # Since the display is initialized more than 50mS after > 4.7V on due to
+  # OS/BEAM/App boot time this isn't strictly necessary but let's be
+  # safe and do it anyway.
+  defp poi(state, @mode_4bit) do
+    state
     |>  write_4_bits(0x03)
-    |>  delay(50)
+    |>  delay(5)
     |>  write_4_bits(0x03)
-    |>  delay(50)
+    |>  delay(5)
     |>  write_4_bits(0x03)
-    |>  delay(50)
+    |>  delay(5)
     |>  write_4_bits(0x02)
   end
 
+  # POI for 8 bit mode
+  defp poi(state, @mode_8bit) do
+    state
+    |>  set_feature(:function_set)
+    |>  delay(5)
+    |>  set_feature(:function_set)
+    |>  delay(5)
+    |>  set_feature(:function_set)
+  end
+
+  defp validate_config!(config) do
+    config
+  end
 
   # -------------------------------------------------------------------
   # CharLCD API callback
@@ -208,9 +252,8 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   end
 
   defp command(display, {:write, content}) do
-    for char <- map_string(content) do
-      {:ok, _} = write_a_byte(display, char, @high)
-    end
+    map_string(content)
+    |>  Enum.each(fn(x) -> write_a_byte(display, x, @high) end)
     {:ok, display}
   end
 
@@ -247,19 +290,35 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   defp command(display, {:ltr_text, :on}) do
     {:ok, enable_feature_flag(display, :entry_mode, @entry_left)}
   end
+
+  # Scroll the entire display left (-) or right (+)
+  defp command(display, {:scroll, 0}), do: {:ok, display}
   defp command(display, {:scroll, cols}) when cols < 0 do
-    write_a_byte(display, @cmd_cursorshift ||| @shift_display ||| @shift_right)
+    write_a_byte(display, @cmd_cursorshift ||| @shift_display)
     command(display, {:scroll, cols + 1})
   end
-  defp command(display, {:scroll, cols}) when cols > 0 do
-    write_a_byte(display, @cmd_cursorshift ||| @shift_display)
+  defp command(display, {:scroll, cols}) do
+    write_a_byte(display, @cmd_cursorshift ||| @shift_display ||| @shift_right)
     command(display, {:scroll, cols - 1})
   end
-  defp command(display, {:scroll, _cols}) do
-    {:ok, display}
+
+  # Scroll(move) cursor right
+  defp command(display, {:right, 0}), do: {:ok, display}
+  defp command(display, {:right, cols}) do
+    write_a_byte(display, @cmd_cursorshift ||| @shift_right)
+    command(display, {:right, cols - 1})
   end
-  defp command(display, {:char, idx, bitmap}) when idx in 0..7 and byte_size(bitmap) === 8 do
-    write_a_byte(display, @cmd_setcgramaddr)
+
+  # Scroll(move) cursor left
+  defp command(display, {:left, 0}), do: {:ok, display}
+  defp command(display, {:left, cols}) do
+    write_a_byte(display, @cmd_cursorshift)
+    command(display, {:left, cols - 1})
+  end
+
+  # Program custom character to CGRAM
+  defp command(display, {:char, idx, bitmap}) when idx in 0..7 and length(bitmap) === 8 do
+    write_a_byte(display, @cmd_setcgramaddr ||| idx)
     for line <- bitmap do
       write_a_byte(display, line, @high)
     end
@@ -315,10 +374,10 @@ defmodule ElixirLCD.CharLCD.HD44780 do
 
     case display[:d0] do
       nil -> display
-        |>  write_4_bits(byte_to_write >>> 4)
-        |>  write_4_bits(byte_to_write &&& 0x0F)
-      _ -> display
-        |>  write_8_bits(byte_to_write)
+             |>  write_4_bits(byte_to_write >>> 4)
+             |>  write_4_bits(byte_to_write)
+      _   -> display
+             |>  write_8_bits(byte_to_write)
     end
   end
 
@@ -332,7 +391,7 @@ defmodule ElixirLCD.CharLCD.HD44780 do
     GPIO.write(display.d5_pid, bits >>> 5 &&& 0x01)
     GPIO.write(display.d6_pid, bits >>> 6 &&& 0x01)
     GPIO.write(display.d7_pid, bits >>> 7 &&& 0x01)
-    display
+    pulse_en(display)
   end
 
   # Write 4 parallel bits to the device
@@ -341,7 +400,7 @@ defmodule ElixirLCD.CharLCD.HD44780 do
     GPIO.write(display.d5_pid, bits >>> 1 &&& 0x01)
     GPIO.write(display.d6_pid, bits >>> 2 &&& 0x01)
     GPIO.write(display.d7_pid, bits >>> 3 &&& 0x01)
-    display
+    pulse_en(display)
   end
 
   defp rs(display, value) do
@@ -352,6 +411,16 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   defp en(display, value) do
     GPIO.write(display[:en_pid], value)
     display
+  end
+
+  defp pulse_en(display) do
+    display
+    |>  en(@low)
+    |>  delay(1)
+    |>  en(@high)
+    |>  delay(1)
+    |>  en(@low)
+    |>  delay(1)
   end
 
   defp delay(display, ms) do
@@ -399,24 +468,27 @@ defmodule ElixirLCD.CharLCD.HD44780 do
   end
 end
 
-if Mix.env == :test do
-  defmodule ElixirALE.GPIO do
+if Mix.env != :prod do
+  if Mix.env != :test do
+    defmodule HD44780Test.MockHD44780 do
+      @moduledoc false
+      def write(_, _), do: :ok
+    end
+  end
 
+  defmodule ElixirALE.GPIO do
+    @moduledoc false
     require Logger
 
-    def start_link(pin, pin_direction, opts \\ []) do
-      Logger.info("MockALE: start_link(#{inspect pin}, #{inspect pin_direction}, #{inspect opts})")
+    def start_link(pin, _pin_direction \\ :foo, _opts \\ []) do
       {:ok, pin}
     end
 
     def write(pin, value) do
-      Logger.info("MockALE: Pin(#{pin}) -> write(#{inspect value})")
+      HD44780Test.MockHD44780.write(pin, value)
       :ok
     end
 
-    def release(pin) do
-      Logger.info("MockALE: Pin(#{pin}) -> release()")
-      :ok
-    end
+    def release(_pin), do: :ok
   end
 end

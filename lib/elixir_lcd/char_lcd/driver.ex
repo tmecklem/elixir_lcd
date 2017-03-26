@@ -1,22 +1,69 @@
 defmodule ElixirLCD.CharLCD.Driver do
   @moduledoc """
-  Define driver behaviour
+  ElixirLCD.CharLCD.Driver defines the behaviour expected of display driver
+  modules. Each display driver module must use this module and implement the
+  expected callback functions.
+  
+    ```elixir
+    defmodule MyDisplayDriver do
+      use ElixirLCD.CharLCD.Driver
+      ...
+    end
+    ```
   """
-  defmacro __using__(_opts) do
+  @doc false
+  defmacro __using__(_) do
     quote do
+      import Kernel, except: [defp: 2]
+      import unquote(__MODULE__), only: [defp: 2]
       @behaviour ElixirLCD.CharLCD.Driver
-      if Mix.env != :test do
-        # require ElixirALE.TestHelper
+    end
+  end
+
+  # Redefine defp when testing to expose private functions
+  @doc false
+  defmacro defp(definition, do: body) do
+    case Mix.env do
+      :test -> quote do
+        Kernel.def(unquote(definition)) do
+          unquote(body)
+        end
+      end
+      _ -> quote do
+        Kernel.defp(unquote(definition)) do
+          unquote(body)
+        end
       end
     end
   end
 
+  @typedoc """
+  Opaque driver module state data
+  """
   @type display :: map
 
-  @callback start :: display
+  @doc """
+  start/1 is called during initialization of ElixirLCD which passes
+  a map of configuration parameters for the driver. The driver is_
+  expected to initialize the display to a ready state and return
+  state data held by and passed into the driver on each call. ElixirLCD
+  manages your driver's state. After this callback returns it is expected
+  that the display is ready to process commands from ElixirLCD.
+  """
+  @callback start(map) :: {:ok | :error, display}
 
-  @callback stop(display) :: atom
+  @doc """
+    stop/1 may be called on request by the application to free the hardware
+    resources held by the display driver.
+  """
+  @callback stop(display) :: :ok
 
+  @doc """
+  execute/0 is called by ElixirLCD to learn the function it should call
+  to send commands to your driver. The typespec of the function returned
+  must be:
+    function(display, operation) :: display
+  The returned function will be called upon to do all of the heavy lifting.
+  """
   @callback execute :: function
-
 end
