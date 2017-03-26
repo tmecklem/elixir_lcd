@@ -11,6 +11,6 @@ jobs:
 
     steps:
       - checkout
-      - run: yes | mix local.hex
+      - run: mix local.hex --force
       - run: mix deps.get
       - run: mix test
