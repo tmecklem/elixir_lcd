@@ -14,5 +14,5 @@ jobs:
       # Run tests
       - run:
           environment:
-            MIX_ENV: test
+            MIX_ENV: "test"
           command: mix test
