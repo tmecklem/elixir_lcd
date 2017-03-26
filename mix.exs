@@ -16,8 +16,8 @@ defmodule ExLCD.Mixfile do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths([:test, :dev]), do: ["lib", "test/support"]
-  defp elixirc_paths(_), do: ["lib"]
+  defp elixirc_paths(:prod), do: ["lib"]
+  defp elixirc_paths(_), do: ["test/support", "lib"]
 
   def application do
     []
@@ -26,7 +26,7 @@ defmodule ExLCD.Mixfile do
   defp deps do
     [
       {:elixir_ale, "~> 0.5.0", only: [:prod]},
-      {:ex_doc, "~> 0.11", only: :dev}
+      {:ex_doc, "~> 0.11", only: [:dev]}
     ]
   end
 

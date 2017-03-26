@@ -10,8 +10,8 @@ jobs:
       - checkout
       - run: mix local.hex --force
       - run: mix local.rebar --force
-      - run: MIX_ENV=test mix deps.get
-      - run: MIX_ENV=test mix compile
+      - run: mix deps.get
+      - run: mix deps.compile
 
       # Run tests
       - run: MIX_ENV=test mix test
