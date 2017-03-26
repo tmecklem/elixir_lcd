@@ -1,5 +1,7 @@
 # ExLCD
 
+[![CircleCI](https://circleci.com/gh/cthree/ex_lcd/tree/master.svg?style=svg&circle-token=f8105a10e6a487d7bddbefdd2886c2a2231609d9)](https://circleci.com/gh/cthree/ex_lcd/tree/master)
+
 **ExLCD** is a Hex package providing an API and support for character
 matrix LCD displays in your Elixir and nerves projects. It uses
 [elixir_ale](https://github.com/fhunleth/elixir_ale) for hardware IO.
