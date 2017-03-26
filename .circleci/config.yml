@@ -13,3 +13,4 @@ jobs:
       - checkout
       - run: yes | mix local.hex
       - run: mix deps.get
+      - run: mix test
