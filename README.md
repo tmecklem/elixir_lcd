@@ -1,8 +1,8 @@
 # ExLCD
 
-[![Hex.pm](https://img.shields.io/hexpm/v/plug.svg)](https://hex.pm/packages/ex_lcd)
-[![Hex.pm](https://img.shields.io/hexpm/dt/plug.svg)](https://hex.pm/packages/ex_lcd)
-[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://hex.pm/packages/ex_lcd)
+[![Hex.pm](https://img.shields.io/hexpm/v/ex_lcd.svg)](https://hex.pm/packages/ex_lcd)
+[![Hex.pm](https://img.shields.io/hexpm/dt/ex_lcd.svg)](https://hex.pm/packages/ex_lcd)
+[![Hex.pm](https://img.shields.io/hexpm/l/ex_lcd.svg)](https://hex.pm/packages/ex_lcd)
 
 **ExLCD** is a Hex package providing an API and support for character
 matrix LCD displays in your Elixir and nerves projects. It uses
