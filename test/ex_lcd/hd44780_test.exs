@@ -132,7 +132,7 @@ defmodule ExLCD.HD44780Test do
     end
 
     test "write hello world writes hello world", %{state: state} do
-      assert {:ok, _} = HD44780.command(state, {:write, "hello world"})
+      assert {:ok, _} = HD44780.command(state, {:print, "hello world"})
       %{stack: stack} = MockHD44780.status()
       written = stack
       |> Enum.map(fn(x) -> x &&& 0xFF end)
@@ -140,11 +140,27 @@ defmodule ExLCD.HD44780Test do
     end
 
     test "write unicode symbols write mapped codes 0x10, 0x81 and 0x9D", %{state: state} do
-      assert {:ok, _} = HD44780.command(state, {:write, "▶︎Д❤️"})
+      assert {:ok, _} = HD44780.command(state, {:print, "▶︎Д❤️"})
       %{stack: stack} = MockHD44780.status()
       written = stack
       |> Enum.map(fn(x) -> x &&& 0xFF end)
       assert [0x10, 0x81, 0x9D] = written
+    end
+
+    test "write a char list writes hello world", %{state: state} do
+      assert {:ok, _} = HD44780.command(state, {:write, 'hello world'})
+      %{stack: stack} = MockHD44780.status()
+      written = stack
+      |> Enum.map(fn(x) -> x &&& 0xFF end)
+      assert 'hello world' = written
+    end
+
+    test "write a list of chars write test", %{state: state} do
+      assert {:ok, _} = HD44780.command(state, {:write, [?t, ?e, ?s, ?t]})
+      %{stack: stack} = MockHD44780.status()
+      written = stack
+      |> Enum.map(fn(x) -> x &&& 0xFF end)
+      assert 'test' = written
     end
 
     test "creating a custom character creates a custom character", %{state: state} do

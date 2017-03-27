@@ -93,25 +93,32 @@ defmodule ExLCD do
 
     Example:
     ```elixir
-      iex> ExLCD.set_cursor(2, 12)
+      iex> ExLCD.move_to(2, 12)
       :ok
     ```
   """
-  @spec set_cursor(row::integer, col::integer) :: :ok
-  def set_cursor(row, col), do: cast({:set_cursor, row, col})
+  @spec move_to(row::integer, col::integer) :: :ok
+  def move_to(row, col), do: cast({:set_cursor, row, col})
 
   @doc """
-  Write a string to the display at the current cursor position.
+  Write a string or charlist to the display at the current cursor position.
 
   Example:
   ```elixir
     iex> ExLCD.write("ExLCD!")
     :ok
+    iex> ExLCD.write('ExLCD!')
+    :ok
+    iex> ExLCD.write(['E', 'x', 'L', 'C', 'D', '!'])
+    :ok
   ```
   """
-  @spec write(binary) :: :ok
+  @spec write(binary | list) :: :ok
+  def write(content) when is_binary(content) do
+    cast({:print, content})
+  end
   def write(content), do: cast({:write, content})
-
+ 
   @doc """
   Scroll the display contents left by 1 or some number of columns.
 
@@ -122,7 +129,7 @@ defmodule ExLCD do
   ```
   """
   @spec scroll_left(integer) :: :ok
-  def scroll_left(cols \\ 1), do: cast({:scroll, cols})
+  def scroll_left(cols \\ 1), do: cast({:scroll, -cols})
 
   @doc """
   Scroll the display contents right by 1 or some number of columns.
@@ -134,7 +141,7 @@ defmodule ExLCD do
     ```
   """
   @spec scroll_right(integer) :: :ok
-  def scroll_right(cols \\ 1), do: cast({:scroll, -cols})
+  def scroll_right(cols \\ 1), do: cast({:scroll, cols})
 
   @doc """
   Move the cursor 1 or some number of columns to the left of its current
@@ -236,6 +243,9 @@ defmodule ExLCD do
   def handle_cast(:home, state), do: execute({:home, []}, state)
   def handle_cast({:set_cursor, row, col}, state) do
     execute({:set_cursor, row, col}, state)
+  end
+  def handle_cast({:print, content}, state) do
+    execute({:print, content}, state)
   end
   def handle_cast({:write, content}, state) do
     execute({:write, content}, state)

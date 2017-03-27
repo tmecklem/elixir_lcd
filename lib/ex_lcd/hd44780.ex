@@ -166,25 +166,24 @@ defmodule ExLCD.HD44780 do
     end
 
     starting_function_state = @cmd_functionset ||| bits ||| font ||| lines
-    starting_display_state = @cmd_dispcontrol ||| @ctl_display
 
-    Map.merge(config, %{
+    display = Map.merge(config, %{
       function_set: starting_function_state,
-      display_control: starting_display_state,
+      display_control: @cmd_dispcontrol,
       row_offsets: row_offsets(cols),
       entry_mode: @cmd_entrymodeset,
       shift_control: @cmd_cursorshift
     })
+
+    display
     |>  reserve_gpio_pins(pins)
     |>  delay(50)
     |>  rs(@low)
     |>  en(@low)
     |>  poi(bits)
     |>  set_feature(:function_set)
-    |>  set_feature(:display_control)
-    |>  clear
-    |>  set_feature(:entry_mode)
-    |>  set_feature(:shift_control)
+    |>  delay(5)
+    |>  clear()
   end
 
   defp row_offsets(cols) do
@@ -251,8 +250,14 @@ defmodule ExLCD.HD44780 do
     {:ok, display}
   end
 
+  # translate unicode string glyphs to char list before writing
+  defp command(display, {:print, content}) do
+    characters = map_string(content)
+    command(display, {:write, characters})
+  end
+
   defp command(display, {:write, content}) do
-    map_string(content)
+    content
     |>  Enum.each(fn(x) -> write_a_byte(display, x, @high) end)
     {:ok, display}
   end
