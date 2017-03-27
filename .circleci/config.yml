@@ -1,0 +1,17 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: elixir:1.4.2
+
+    working_directory: ~/ex_lcd
+
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix deps.compile
+
+      # Run tests
+      - run: MIX_ENV=test mix test
