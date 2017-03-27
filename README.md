@@ -1,6 +1,8 @@
 # ExLCD
 
-[![CircleCI](https://circleci.com/gh/cthree/ex_lcd/tree/master.svg?style=svg&circle-token=f8105a10e6a487d7bddbefdd2886c2a2231609d9)](https://circleci.com/gh/cthree/ex_lcd/tree/master)
+[![Hex.pm](https://img.shields.io/hexpm/v/plug.svg)](https://hex.pm/packages/ex_lcd)
+[![Hex.pm](https://img.shields.io/hexpm/dt/plug.svg)](https://hex.pm/packages/ex_lcd)
+[![Hex.pm](https://img.shields.io/hexpm/l/plug.svg)](https://hex.pm/packages/ex_lcd)
 
 **ExLCD** is a Hex package providing an API and support for character
 matrix LCD displays in your Elixir and nerves projects. It uses
@@ -27,8 +29,8 @@ help! Driver modules for unsupported displays is especially appreciated.
 ## Acknowledgements
 
 Many thanks to [@tmecklem](https://github.com/tmecklem) for inspiration
-and encouragement. ExLCD started as his elixir_lcd package but none of
-the original code remains but the guidance was appreciated.
+and encouragement. ExLCD started as his elixir_lcd package. While none of
+the original code remains, his guidance and advice is greatly appreciated.
 
 ## Installation
 
@@ -37,7 +39,7 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
   1. Add ex_lcd to your list of dependencies in `mix.exs`:
 
         def deps do
-          [{:ex_lcd, "~> 0.2.0"}]
+          [{:ex_lcd, "~> 0.3.0"}]
         end
 
   2. Ensure ex_lcd is started before your application:
