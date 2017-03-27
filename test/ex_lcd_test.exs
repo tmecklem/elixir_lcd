@@ -1,6 +1,6 @@
 defmodule ExLCDTest do
   use ExUnit.Case
-  
+
   test "start_link starts a genserver and initializes its state" do
       assert {:ok, pid} = ExLCD.start_link({TestDriver, %{}})
       assert Process.alive?(pid)
@@ -29,6 +29,11 @@ defmodule ExLCDTest do
     end
 
     test "write outputs some text", state do
+      assert {:noreply, state} = ExLCD.handle_cast({:write, 'hello'}, state[:state])
+      assert {:write, 'hello'} = state.display
+    end
+
+    test "print outputs a string", state do
       assert {:noreply, state} = ExLCD.handle_cast({:write, "hello"}, state[:state])
       assert {:write, "hello"} = state.display
     end
