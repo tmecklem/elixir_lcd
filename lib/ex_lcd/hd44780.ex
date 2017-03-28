@@ -3,7 +3,7 @@ defmodule ExLCD.HD44780 do
   **ExLCD.HD44780** is the display driver module for Hitachi
   HD44780 type parallel LCD display controller managed display modules.
 
-  ## Hitachi HD44780 Controller
+  ## Hitachi HD44780 Style Controller (including Sitronix ST7066)
 
   The HD44780 is the most ubiquitous character matrix display controller
   but not the only one. It supports a number of standard operations like
@@ -153,8 +153,6 @@ defmodule ExLCD.HD44780 do
       _ ->  @lines_2
     end
 
-    cols = config.cols
-
     font = case config[:font_5x10] do
       true  ->  @font_5x10
       _     ->  @font_5x8
@@ -170,24 +168,17 @@ defmodule ExLCD.HD44780 do
     display = Map.merge(config, %{
       function_set: starting_function_state,
       display_control: @cmd_dispcontrol,
-      row_offsets: row_offsets(cols),
       entry_mode: @cmd_entrymodeset,
       shift_control: @cmd_cursorshift
     })
 
     display
     |>  reserve_gpio_pins(pins)
-    |>  delay(50)
     |>  rs(@low)
     |>  en(@low)
     |>  poi(bits)
     |>  set_feature(:function_set)
-    |>  delay(5)
     |>  clear()
-  end
-
-  defp row_offsets(cols) do
-    %{ 0 => 0x00, 1 => 0x40, 2 => 0x00 + cols, 3 => 0x40 + cols }
   end
 
   # setup GPIO output pins, add the pids to the config and return
@@ -201,10 +192,7 @@ defmodule ExLCD.HD44780 do
 
   # start ElixirALE.GPIO GenServer to manage a GPIO pin and return the pid
   defp start_pin(pin, direction) do
-    with {:ok, pid} <- GPIO.start_link(pin, direction)
-    do
-      pid
-    end
+    with {:ok, pid} <- GPIO.start_link(pin, direction), do: pid
   end
 
   # Software Power On Init (POI) for 4bit operation of HD44780 controller.
@@ -214,11 +202,8 @@ defmodule ExLCD.HD44780 do
   defp poi(state, @mode_4bit) do
     state
     |>  write_4_bits(0x03)
-    |>  delay(5)
     |>  write_4_bits(0x03)
-    |>  delay(5)
     |>  write_4_bits(0x03)
-    |>  delay(5)
     |>  write_4_bits(0x02)
   end
 
@@ -226,9 +211,7 @@ defmodule ExLCD.HD44780 do
   defp poi(state, @mode_8bit) do
     state
     |>  set_feature(:function_set)
-    |>  delay(5)
     |>  set_feature(:function_set)
-    |>  delay(5)
     |>  set_feature(:function_set)
   end
 
@@ -250,9 +233,9 @@ defmodule ExLCD.HD44780 do
     {:ok, display}
   end
 
-  # translate unicode string glyphs to char list before writing
+  # translate string to charlist
   defp command(display, {:print, content}) do
-    characters = map_string(content)
+    characters = String.to_charlist(content)
     command(display, {:write, characters})
   end
 
@@ -340,20 +323,31 @@ defmodule ExLCD.HD44780 do
   defp clear(display) do
     display
     |>  write_a_byte(@cmd_clear)
-    |>  delay(20)
   end
 
   defp home(display) do
     display
     |>  write_a_byte(@cmd_home)
-    |>  delay(20)
   end
 
+  # DDRAM is organized as two 40 byte rows. In a 2x display the first row
+  # maps to address 0x00 - 0x27 and the second row maps to 0x40 - 0x67
+  # in a 4x display rows 0 & 2 are mapped to the first row of DDRAM and
+  # rows 1 & 3 map to the second row of DDRAM. This means that the rows
+  # are not contiguous in memory.
+  #
+  # row_offsets/1 determines the starting DDRAM address of each display row
+  # and returns a map for up to 4 rows.
+  defp row_offsets(cols) do
+    %{ 0 => 0x00, 1 => 0x40, 2 => 0x00 + cols, 3 => 0x40 + cols }
+  end
+
+  # Set the DDRAM address corresponding to the {row,col} position
   defp set_cursor(display, {row, col}) do
     col = min(col, display[:cols] - 1)
     row = min(row, display[:rows] - 1)
-    %{^row => offset} = display[:row_offsets]
-    write_a_byte(display, @cmd_setddramaddr ||| col + offset)
+    %{^row => offset} = row_offsets(display[:cols])
+    write_a_byte(display, @cmd_setddramaddr ||| (col + offset))
   end
 
   # Switch a register flag bit OFF(0). Return the updated state.
@@ -421,11 +415,8 @@ defmodule ExLCD.HD44780 do
   defp pulse_en(display) do
     display
     |>  en(@low)
-    |>  delay(1)
     |>  en(@high)
-    |>  delay(1)
     |>  en(@low)
-    |>  delay(1)
   end
 
   defp delay(display, ms) do
@@ -433,47 +424,13 @@ defmodule ExLCD.HD44780 do
     display
   end
 
-  defp character_table do
-    %{
-      # Low ASCII, arrows mainly
-      0x10 => "▶︎", 0x11 => "◀︎", 0x12 => "“", 0x13 => "”",
-      0x14 => "↟", 0x15 => "↡", 0x16 => "●", 0x17 => "↵",
-      0x18 => "↑", 0x19 => "↓", 0x1A => "→", 0x1B => "←",
-      0x1C => "≤", 0x1D => "≥", 0x1E => "▲", 0x1F => "▼",
-      # A house instead on nbsp for some reason...
-      0x7F => "⌂",
-      # Cyrillicish
-      0x80 => "Б", 0x81 => "Д", 0x82 => "Ж", 0x83 => "З",
-      0x84 => "И", 0x85 => "Й", 0x86 => "Л", 0x87 => "П",
-      0x88 => "У", 0x89 => "Ц", 0x8A => "Ч", 0x8B => "Ш",
-      0x8C => "Щ", 0x8D => "Ъ", 0x8E => "Ы", 0x8F => "Э",
-      # Greekish
-      0x90 => "α", 0x91 => "♪", 0x92 => "Γ", 0x93 => "π",
-      0x94 => "Σ", 0x95 => "σ", 0x96 => "♫", 0x97 => "τ",
-      0x98 => "🔔", 0x99 => "θ", 0x9A => "Ω", 0x9B => "δ",
-      0x9C => "∞", 0x9D => "❤️", 0x9E => "ℇ", 0x9F => "∩"
-    }
-  end
-
-  defp map_string(string) do
-    string
-    |>  String.graphemes()
-    |>  Enum.map(fn x -> map_char(x) end)
-  end
-
-  defp map_char(grapheme) when byte_size(grapheme) > 1 do
-    {code, _} = character_table()
-    |>  Enum.find({0x3F, grapheme}, fn {_k, v} -> v === grapheme end)
-    code
-  end
-
-  defp map_char(grapheme) do
-    [ code | _ ] = String.to_charlist(grapheme)
-    code
-  end
 end
 
-if Mix.env != :prod do
+# For testing ExLCD and building for the host (no hardware)
+# we stub out elixir_ale.
+if ExLCD.Driver.target == "host" do
+  # Not testing, stub out the hardware mock because it's part of
+  # the test system
   if Mix.env != :test do
     defmodule MockHD44780 do
       @moduledoc false

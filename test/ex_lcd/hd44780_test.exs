@@ -128,7 +128,7 @@ defmodule ExLCD.HD44780Test do
     test "move cursor to row 1, column 14 moves the cursor", %{state: state} do
       # 0b1aaaaaa - 0x40 + 0x0E , row 1 starts at 0x40, col 14 is offset 0xE from there
       assert {:ok, _} = HD44780.command(state, {:set_cursor, {1, 14}})
-      assert 0xCE = (stack_value() &&& 0xCE)
+      assert 0xCE = (stack_value() &&& 0xFF)
     end
 
     test "write hello world writes hello world", %{state: state} do
@@ -137,14 +137,6 @@ defmodule ExLCD.HD44780Test do
       written = stack
       |> Enum.map(fn(x) -> x &&& 0xFF end)
       assert 'hello world' = written
-    end
-
-    test "write unicode symbols write mapped codes 0x10, 0x81 and 0x9D", %{state: state} do
-      assert {:ok, _} = HD44780.command(state, {:print, "▶︎Д❤️"})
-      %{stack: stack} = MockHD44780.status()
-      written = stack
-      |> Enum.map(fn(x) -> x &&& 0xFF end)
-      assert [0x10, 0x81, 0x9D] = written
     end
 
     test "write a char list writes hello world", %{state: state} do

@@ -118,7 +118,7 @@ defmodule ExLCD do
     cast({:print, content})
   end
   def write(content), do: cast({:write, content})
- 
+
   @doc """
   Scroll the display contents left by 1 or some number of columns.
 
@@ -242,7 +242,7 @@ defmodule ExLCD do
   def handle_cast(:clear, state), do: execute({:clear, []}, state)
   def handle_cast(:home, state), do: execute({:home, []}, state)
   def handle_cast({:set_cursor, row, col}, state) do
-    execute({:set_cursor, row, col}, state)
+    execute({:set_cursor, {row, col}}, state)
   end
   def handle_cast({:print, content}, state) do
     execute({:print, content}, state)

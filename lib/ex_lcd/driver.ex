@@ -3,7 +3,7 @@ defmodule ExLCD.Driver do
   ExLCD.Driver defines the behaviour expected of display driver
   modules. Each display driver module must use this module and implement the
   expected callback functions.
-  
+
     ```elixir
     defmodule MyDisplayDriver do
       use ExLCD.Driver
@@ -15,7 +15,7 @@ defmodule ExLCD.Driver do
   defmacro __using__(_) do
     quote do
       import Kernel, except: [defp: 2]
-      import unquote(__MODULE__), only: [defp: 2]
+      import unquote(__MODULE__), only: [defp: 2, target: 0]
       @behaviour ExLCD.Driver
     end
   end
@@ -35,6 +35,12 @@ defmodule ExLCD.Driver do
         end
       end
     end
+  end
+
+  @doc false
+  # Return the nerves build target or "host" if there isn't one
+  def target() do
+    System.get_env("MIX_TARGET") || "host"
   end
 
   @typedoc """
