@@ -12,6 +12,10 @@ The hardware interface and the user API are separate modules providing
 relative hardware independence. This provides you with the ability
 to change displays without significant changes your application code.
 
+**Disclaimer** This is still under heavy development and probably isn't suited
+for production use. Please consider testing and contributing to improving the
+project.
+
 ## Examples
 
 Example projects using ExLCD are available in the
