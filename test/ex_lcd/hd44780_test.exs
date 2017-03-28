@@ -139,14 +139,6 @@ defmodule ExLCD.HD44780Test do
       assert 'hello world' = written
     end
 
-    test "write unicode symbols write mapped codes 0x10, 0x81 and 0x9D", %{state: state} do
-      assert {:ok, _} = HD44780.command(state, {:print, "▶︎Д❤️"})
-      %{stack: stack} = MockHD44780.status()
-      written = stack
-      |> Enum.map(fn(x) -> x &&& 0xFF end)
-      assert [0x10, 0x81, 0x9D] = written
-    end
-
     test "write a char list writes hello world", %{state: state} do
       assert {:ok, _} = HD44780.command(state, {:write, 'hello world'})
       %{stack: stack} = MockHD44780.status()

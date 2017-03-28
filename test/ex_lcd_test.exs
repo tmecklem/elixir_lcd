@@ -25,7 +25,7 @@ defmodule ExLCDTest do
 
     test "set_cursor positions the cursor", state do
       assert {:noreply, state} = ExLCD.handle_cast({:set_cursor, 1, 2}, state[:state])
-      assert {:set_cursor, 1, 2} = state.display
+      assert {:set_cursor, {1, 2}} = state.display
     end
 
     test "write outputs some text", state do
