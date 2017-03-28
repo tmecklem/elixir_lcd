@@ -3,7 +3,7 @@ defmodule ExLCD.HD44780 do
   **ExLCD.HD44780** is the display driver module for Hitachi
   HD44780 type parallel LCD display controller managed display modules.
 
-  ## Hitachi HD44780 Controller
+  ## Hitachi HD44780 Style Controller (including Sitronix ST7066)
 
   The HD44780 is the most ubiquitous character matrix display controller
   but not the only one. It supports a number of standard operations like
@@ -233,9 +233,9 @@ defmodule ExLCD.HD44780 do
     {:ok, display}
   end
 
-  # translate unicode string glyphs to char list before writing
+  # translate string to charlist
   defp command(display, {:print, content}) do
-    characters = map_string(content)
+    characters = String.to_charlist(content)
     command(display, {:write, characters})
   end
 
@@ -424,45 +424,6 @@ defmodule ExLCD.HD44780 do
     display
   end
 
-  # Assumes European HD44780UA02 model
-  defp character_table do
-    %{
-      # Low ASCII, arrows mainly
-      0x10 => "▶︎", 0x11 => "◀︎", 0x12 => "“", 0x13 => "”",
-      0x14 => "↟", 0x15 => "↡", 0x16 => "●", 0x17 => "↵",
-      0x18 => "↑", 0x19 => "↓", 0x1A => "→", 0x1B => "←",
-      0x1C => "≤", 0x1D => "≥", 0x1E => "▲", 0x1F => "▼",
-      # A house instead on nbsp for some reason...
-      0x7F => "⌂",
-      # Cyrillicish
-      0x80 => "Б", 0x81 => "Д", 0x82 => "Ж", 0x83 => "З",
-      0x84 => "И", 0x85 => "Й", 0x86 => "Л", 0x87 => "П",
-      0x88 => "У", 0x89 => "Ц", 0x8A => "Ч", 0x8B => "Ш",
-      0x8C => "Щ", 0x8D => "Ъ", 0x8E => "Ы", 0x8F => "Э",
-      # Greekish
-      0x90 => "α", 0x91 => "♪", 0x92 => "Γ", 0x93 => "π",
-      0x94 => "Σ", 0x95 => "σ", 0x96 => "♫", 0x97 => "τ",
-      0x98 => "🔔", 0x99 => "θ", 0x9A => "Ω", 0x9B => "δ",
-      0x9C => "∞", 0x9D => "❤️", 0x9E => "ℇ", 0x9F => "∩"
-    }
-  end
-
-  defp map_string(string) do
-    string
-    |>  String.graphemes()
-    |>  Enum.map(fn x -> map_char(x) end)
-  end
-
-  defp map_char(grapheme) when byte_size(grapheme) > 1 do
-    {code, _} = character_table()
-    |>  Enum.find({0x3F, grapheme}, fn {_k, v} -> v === grapheme end)
-    code
-  end
-
-  defp map_char(grapheme) do
-    [ code | _ ] = String.to_charlist(grapheme)
-    code
-  end
 end
 
 # For testing ExLCD and building for the host (no hardware)
