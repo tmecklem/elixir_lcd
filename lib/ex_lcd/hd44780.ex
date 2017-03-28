@@ -465,7 +465,11 @@ defmodule ExLCD.HD44780 do
   end
 end
 
-if Mix.env != :prod do
+# For testing ExLCD and building for the host (no hardware)
+# we stub out elixir_ale.
+if ExLCD.Driver.target == "host" do
+  # Not testing, stub out the hardware mock because it's part of
+  # the test system
   if Mix.env != :test do
     defmodule MockHD44780 do
       @moduledoc false
