@@ -128,7 +128,7 @@ defmodule ExLCD.HD44780Test do
     test "move cursor to row 1, column 14 moves the cursor", %{state: state} do
       # 0b1aaaaaa - 0x40 + 0x0E , row 1 starts at 0x40, col 14 is offset 0xE from there
       assert {:ok, _} = HD44780.command(state, {:set_cursor, {1, 14}})
-      assert 0xCE = (stack_value() &&& 0xCE)
+      assert 0xCE = (stack_value() &&& 0xFF)
     end
 
     test "write hello world writes hello world", %{state: state} do
