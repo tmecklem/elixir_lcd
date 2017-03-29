@@ -419,37 +419,8 @@ defmodule ExLCD.HD44780 do
     |>  en(@low)
   end
 
-  defp delay(display, ms) do
-    Process.sleep(ms)
-    display
-  end
-
-end
-
-# For testing ExLCD and building for the host (no hardware)
-# we stub out elixir_ale.
-if ExLCD.Driver.target == "host" do
-  # Not testing, stub out the hardware mock because it's part of
-  # the test system
-  if Mix.env != :test do
-    defmodule MockHD44780 do
-      @moduledoc false
-      def write(_, _), do: :ok
-    end
-  end
-
-  defmodule ElixirALE.GPIO do
-    @moduledoc false
-
-    def start_link(pin, _pin_direction \\ :foo, _opts \\ []) do
-      {:ok, pin}
-    end
-
-    def write(pin, value) do
-      MockHD44780.write(pin, value)
-      :ok
-    end
-
-    def release(_pin), do: :ok
-  end
+  # defp delay(display, ms) do
+  #   Process.sleep(ms)
+  #   display
+  # end
 end

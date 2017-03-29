@@ -3,7 +3,7 @@ defmodule ExLCD.Mixfile do
 
   def project do
     [app: :ex_lcd,
-     version: "0.3.1",
+     version: "0.3.2",
      elixir: "~> 1.4",
      description: description(),
      package: package(),
@@ -25,7 +25,7 @@ defmodule ExLCD.Mixfile do
 
   defp deps do
     [
-      {:elixir_ale, "~> 0.6.0", only: :prod},
+      # {:elixir_ale, "~> 0.6.0", only: :prod},
       {:ex_doc, "~> 0.11", only: [:dev]}
     ]
   end
