@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: elixir:1.4.2
+      - image: elixir:1.4
 
     working_directory: ~/ex_lcd
 
@@ -14,4 +14,29 @@ jobs:
       - run: mix deps.compile
 
       # Run tests
-      - run: MIX_ENV=test mix test
+      - run:
+          environment:
+            MIX_ENV: "test"
+          command: |
+            mix test
+
+  deploy_hex:
+    docker:
+      - image: elixir:1.4
+
+    working_directory: ~/ex_lcd_deploy
+
+    steps:
+      - checkout
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+      - run: mix deps.get
+      - run: mix deps.compile
+      # - run: mix hex.auth something something??
+
+      # Deploy to Hex
+      - deploy:
+        command: |
+          if [ ${CIRCLE_BRANCH} == "master" ]; then
+            # publish the package release here...
+          fi
